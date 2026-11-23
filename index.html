@@ -324,6 +324,20 @@ table{font-size:13.5px}th{font-size:11px}
 .dg{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 18px}
 .lh{margin-bottom:8px}.lh h2{font-size:16px}.back{padding:6px 12px;font-size:13.5px}
 .box header{padding:10px 16px}
+
+/* Export + PIN */
+.dtop .dex{margin-left:auto;background:linear-gradient(135deg,var(--b2),var(--b1));color:#fff;border:1px solid var(--gold);font-weight:700}
+.dtop .dex+*{margin-left:0}
+#xov{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+#xov .xb{background:#fff;border-radius:14px;border-top:3px solid var(--gold);padding:16px 18px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#xov h3{margin:0 0 4px;font-size:16px;font-weight:800;color:var(--b1)}
+#xov p{margin:0 0 10px;color:var(--mut);font-size:13px}
+#xov input{width:100%;padding:9px 12px;border:1px solid var(--gold2);border-radius:10px;font-size:18px;letter-spacing:.3em;text-align:center;outline:none}
+#xov input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.22)}
+#xov .xe{color:#b91c1c;font-size:12.5px;font-weight:600;min-height:18px;margin:6px 0 2px}
+#xov .xa{display:flex;gap:8px;margin-top:6px}
+#xov .xa button{flex:1;padding:8px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--gold2);background:#fff;color:var(--b2)}
+#xov .xa button.p{background:linear-gradient(135deg,var(--b2),var(--b1));color:#fff;border-color:var(--gold)}
 </style></head><body>
 <header><div class="hd"><img class="logo" src="icon-192.png" alt="Logo"><div><h1>Dashboard Data Maqiis</h1><small>Tahun Ajaran 2026/2027</small><small id="sub">Memuat data…</small></div></div>
 <div class="bar" id="chips"></div></header>
@@ -463,7 +477,8 @@ function openK(i,f){const k=window._kk[i];openM('Kelas '+k.split('|')[1]+' · '+
 function openT(t,f){openM((t?'Kelas '+t:'Semua Kelas')+(f?' · '+JK(f):''),window._kd.filter(x=>(!t||x['Tingkat']==t)&&(!f||x['Gender']==f)))}
 function render(){$('#app').classList.toggle('wide',tab=='data');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
  if(tab=='data'){const dd=data();window._dd=dd;DFL.forEach(([k,,f])=>{if(DF[k]&&!dd.some(x=>f(x)==DF[k]))DF[k]=''});
-  $('#app').innerHTML=`<div class="dtop"><h3 id="dcnt"></h3><small>Klik nomor urut untuk melihat detail · klik judul kolom untuk mengurutkan</small></div><div class="dbar"><label class="df dsr"><span>Cari</span><input id="dq" type="search" placeholder="🔍 Nama, NIS, NISN, NIK, No KK…" value="${esc(DQ)}" autocomplete="off"></label><div class="dfl" id="dfl"></div></div><div class="lw dl" id="dlw"></div>`;
+  $('#app').innerHTML=`<div class="dtop"><h3 id="dcnt"></h3><small>Klik nomor urut untuk melihat detail · klik judul kolom untuk mengurutkan</small><button type="button" class="dex" id="dex">⬇ Export Data</button></div><div class="dbar"><label class="df dsr"><span>Cari</span><input id="dq" type="search" placeholder="🔍 Nama, NIS, NISN, NIK, No KK…" value="${esc(DQ)}" autocomplete="off"></label><div class="dfl" id="dfl"></div></div><div class="lw dl" id="dlw"></div>`;
+  $('#dex').onclick=openExport;
   $('#dq').oninput=e=>{DQ=e.target.value;drawData()};
   $('#dfl').onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;DF[k]=e.target.value;drawData()};
   $('#dfl').onclick=e=>{if(e.target.id=='dfr'){DF={kelas:'',markaz:'',tingkat:'',jenjang:''};DQ='';$('#dq').value='';drawData()}};
@@ -563,6 +578,34 @@ function drawData(){const base=window._dd||[];
  const q=DQ.trim().toLowerCase();const f=base.filter(x=>pass(x,'')&&(!q||hay(x).includes(q)));window._dl=f.slice().sort((a,b)=>a['Nama'].localeCompare(b['Nama']));
  $('#dcnt').textContent='Data Siswa · '+f.length+' siswa'+(f.length!=base.length?' (dari '+base.length+')':'');
  drawDl();updTga()}
+
+// ====== EXPORT DATA SISWA (wajib PIN) ======
+// Ganti PIN: buka Console browser, jalankan  cyrb53('PIN_BARU')  lalu tempel hasilnya ke EXPORT_PIN_HASH.
+// Catatan: pengecekan PIN dilakukan di browser, sehingga bersifat pembatas akses biasa (bukan keamanan tingkat server).
+const EXPORT_PIN_HASH='17ghlf8ctx2'; // PIN bawaan: 123456 (SEGERA GANTI)
+const cyrb53=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,c;i<s.length;i++){c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
+let xFail=0,xLock=0;
+function openExport(){const n=(window._dl||[]).length;if(!n){alert('Tidak ada data untuk diexport. Periksa filter Anda.');return}
+ const o=document.createElement('div');o.id='xov';
+ o.innerHTML=`<div class="xb" role="dialog" aria-modal="true"><h3>Export Data Siswa</h3><p>${n} siswa sesuai filter saat ini. Masukkan PIN untuk melanjutkan.</p><input id="xpin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN"><div class="xe" id="xerr"></div><div class="xa"><button type="button" id="xno">Batal</button><button type="button" class="p" id="xok">Export</button></div></div>`;
+ document.body.appendChild(o);const pin=o.querySelector('#xpin'),er=o.querySelector('#xerr');pin.focus();
+ const close=()=>o.remove();
+ const go=()=>{const w=Math.ceil((xLock-Date.now())/1000);if(w>0){er.textContent='Terlalu banyak percobaan. Coba lagi dalam '+w+' detik.';return}
+  if(cyrb53(pin.value.trim())===EXPORT_PIN_HASH){xFail=0;close();doExport()}
+  else{xFail++;pin.value='';pin.focus();if(xFail>=3){xFail=0;xLock=Date.now()+30000;er.textContent='PIN salah 3 kali. Dikunci 30 detik.'}else er.textContent='PIN salah.'}};
+ o.querySelector('#xok').onclick=go;o.querySelector('#xno').onclick=close;
+ pin.onkeydown=e=>{if(e.key=='Enter')go();if(e.key=='Escape')close()};o.onclick=e=>{if(e.target===o)close()}}
+function doExport(){const L=window._dl||[];
+ const T=v=>'="'+String(v==null?'':v).replace(/"/g,'""')+'"'; // paksa teks (NIK/NIS tidak jadi 3,2E+15)
+ const S=v=>{v=String(v==null?'':v);if(/^[=+@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};
+ const H=['No','NIS','NISN','NIK','No KK','Nama','Nama Arab','Jenis Kelamin','Tempat Lahir','Tanggal Lahir','Umur','Sekolah','Markaz','Tingkat','Kelas','Wali Kelas','Anak Ke','Jml Saudara','Nama Ayah','NIK Ayah','Tempat, Tgl Lahir Ayah','Nama Ibu','NIK Ibu','Tempat, Tgl Lahir Ibu','Alamat'];
+ const rows=L.map((x,i)=>{const a=ortu(x,'ayah'),b=ortu(x,'ibu'),m=/^(\d+)/.exec(x['Anak Ke']||'');
+  return [i+1,T(x['NIS']),T(x['NISN']),T(x['NIK']),T(kkOf(x)),S(x['Nama']),S(x['Nama Arab']),S(x['Gender']=='L'?'Laki-laki':x['Gender']=='P'?'Perempuan':''),S(title(x['Tempat Lahir'])),S(tgl(x['Tanggal Lahir'])),S(ageStr(x)),S(x._sk),S(x._mk),S(x['Tingkat']),S(x['Kelas']),S(wali(x._mk,x['Kelas'])),S(x['Anak Ke']),S(x['Jml Saudara']),S(x['Nama Ayah']),T(a.nik),S(a.ttl),S(x['Nama Ibu']),T(b.nik),S(b.ttl),S(alamat(x))].join(',')});
+ const csvT='\ufeff'+H.map(S).join(',')+'\r\n'+rows.join('\r\n');
+ const tag=[DF.markaz,DF.tingkat?'kelas-'+DF.tingkat:'',DF.kelas?DF.kelas.split('|')[1]:'',DF.jenjang].filter(Boolean).join('_').replace(/[^\w\-]+/g,'-');
+ const name='data-siswa'+(tag?'_'+tag:'')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csvT],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
 function drawDl(){const e=$('#dlw');if(e)e.innerHTML=lstHTML('dl',window._dl)}
 function closeM(){render();window.scrollTo(0,lastY)}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
