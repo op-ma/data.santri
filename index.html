@@ -477,7 +477,7 @@ function openK(i,f){const k=window._kk[i];openM('Kelas '+k.split('|')[1]+' · '+
 function openT(t,f){openM((t?'Kelas '+t:'Semua Kelas')+(f?' · '+JK(f):''),window._kd.filter(x=>(!t||x['Tingkat']==t)&&(!f||x['Gender']==f)))}
 function render(){$('#app').classList.toggle('wide',tab=='data');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
  if(tab=='data'){const dd=data();window._dd=dd;DFL.forEach(([k,,f])=>{if(DF[k]&&!dd.some(x=>f(x)==DF[k]))DF[k]=''});
-  $('#app').innerHTML=`<div class="dtop"><h3 id="dcnt"></h3><small>Klik nomor urut untuk melihat detail · klik judul kolom untuk mengurutkan</small><button type="button" class="dex" id="dex">⬇ Export Data</button></div><div class="dbar"><label class="df dsr"><span>Cari</span><input id="dq" type="search" placeholder="🔍 Nama, NIS, NISN, NIK, No KK…" value="${esc(DQ)}" autocomplete="off"></label><div class="dfl" id="dfl"></div></div><div class="lw dl" id="dlw"></div>`;
+  $('#app').innerHTML=`<div class="dtop"><h3 id="dcnt"></h3><small>Klik nomor urut untuk melihat detail · klik judul kolom untuk mengurutkan</small><button type="button" class="dex" id="dex">⬇ Export Data</button></div><div class="dbar"><label class="df dsr"><span>Cari</span><input id="dq" type="search" placeholder="🔍 Nama siswa, nama ayah/ibu, NIS, NISN, NIK, No KK…" value="${esc(DQ)}" autocomplete="off"></label><div class="dfl" id="dfl"></div></div><div class="lw dl" id="dlw"></div>`;
   $('#dex').onclick=openExport;
   $('#dq').oninput=e=>{DQ=e.target.value;drawData()};
   $('#dfl').onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;DF[k]=e.target.value;drawData()};
@@ -561,7 +561,7 @@ function ortu(x,p){const k=pkey()[p]||{};let t='';
  if(k.ttl)t=x[k.ttl]||'';else t=[k.tmp?title(x[k.tmp]):'',k.tgl?tgl(x[k.tgl]):''].filter(Boolean).join(', ');
  return {nik:k.nik?x[k.nik]:'',ttl:t}}
 function kkOf(x){if(KKK===undefined){const ks=Object.keys(ALL[0]||{});KKK=ks.find(k=>/^(no\.?|nomor)\s*kk$/i.test(k.trim()))||ks.find(k=>/kartu\s*keluarga/i.test(k))||ks.find(k=>/\bkk\b/i.test(k))||null}return KKK?x[KKK]:''}
-const hay=x=>[x['Nama'],x['Nama Arab'],x['NIS'],x['NISN'],x['NIK'],kkOf(x),ortu(x,'ayah').nik,ortu(x,'ibu').nik].join(' ').toLowerCase();
+const hay=x=>[x['Nama'],x['Nama Arab'],x['NIS'],x['NISN'],x['NIK'],kkOf(x),x['Nama Ayah'],x['Nama Ibu'],ortu(x,'ayah').nik,ortu(x,'ibu').nik].join(' ').toLowerCase();
 function jjOf(x){if(x._jj!==undefined)return x._jj;let v=(x['Jenjang']||'').trim();
  if(!v){const m=/^\s*(mts|ma|smp|sma|smk|mi|sd|ra|tk)\b/i.exec(x['Sekolah']||'');if(m)v=m[1]}
  if(!v){const t=(x['Tingkat']||'').toUpperCase();v=['VII','VIII','IX'].includes(t)?'MTs':['X','XI','XII'].includes(t)?'MA':''}
@@ -582,7 +582,7 @@ function drawData(){const base=window._dd||[];
 // ====== EXPORT DATA SISWA (wajib PIN) ======
 // Ganti PIN: buka Console browser, jalankan  cyrb53('PIN_BARU')  lalu tempel hasilnya ke EXPORT_PIN_HASH.
 // Catatan: pengecekan PIN dilakukan di browser, sehingga bersifat pembatas akses biasa (bukan keamanan tingkat server).
-const EXPORT_PIN_HASH='17ghlf8ctx2'; // PIN bawaan: 123456 (SEGERA GANTI)
+const EXPORT_PIN_HASH='29y08r6pzip'; // PIN sudah diganti
 const cyrb53=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,c;i<s.length;i++){c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
 let xFail=0,xLock=0;
 function openExport(){const n=(window._dl||[]).length;if(!n){alert('Tidak ada data untuk diexport. Periksa filter Anda.');return}
@@ -595,17 +595,40 @@ function openExport(){const n=(window._dl||[]).length;if(!n){alert('Tidak ada da
   else{xFail++;pin.value='';pin.focus();if(xFail>=3){xFail=0;xLock=Date.now()+30000;er.textContent='PIN salah 3 kali. Dikunci 30 detik.'}else er.textContent='PIN salah.'}};
  o.querySelector('#xok').onclick=go;o.querySelector('#xno').onclick=close;
  pin.onkeydown=e=>{if(e.key=='Enter')go();if(e.key=='Escape')close()};o.onclick=e=>{if(e.target===o)close()}}
+// Pembuat file .xlsx murni JavaScript (tanpa library, jalan offline)
+const CRCT=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRCT[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0};
+function zipStore(files){const enc=new TextEncoder(),ch=[],cd=[];let off=0;
+ const u16=v=>[v&255,(v>>>8)&255],u32=v=>[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+ files.forEach(([name,txt])=>{const nb=enc.encode(name),d=enc.encode(txt),crc=crc32(d);
+  const lh=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(nb.length),...u16(0)]);
+  ch.push(lh,nb,d);
+  cd.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(nb.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nb);
+  off+=lh.length+nb.length+d.length});
+ const cdl=cd.reduce((a,b)=>a+b.length,0);
+ const end=new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdl),...u32(off),...u16(0)]);
+ return new Blob([...ch,...cd,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+function xlsxBlob(H,R,sheet){
+ const esc=v=>String(v==null?'':v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ const col=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
+ const cell=(v,r,c,st)=>`<c r="${col(c)}${r}"${st?` s="${st}"`:''} t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`; // semua sel bertipe teks (NIK/NIS aman)
+ const w=H.map((h,i)=>Math.min(45,Math.max(7,String(h).length+2,...R.map(r=>String(r[i]==null?'':r[i]).length+2))));
+ const sd=`<row r="1" ht="30" customHeight="1">${H.map((h,c)=>cell(h,1,c,1)).join('')}</row>`+R.map((r,i)=>`<row r="${i+2}">${r.map((v,c)=>cell(v,i+2,c,0)).join('')}</row>`).join('');
+ const X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n',N='xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+ return zipStore([
+ ['[Content_Types].xml',X+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+ ['_rels/.rels',X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+ ['xl/workbook.xml',X+`<workbook ${N} xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${esc(sheet)}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+ ['xl/_rels/workbook.xml.rels',X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+ ['xl/styles.xml',X+`<styleSheet ${N}><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF047857"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="49" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`],
+ ['xl/worksheets/sheet1.xml',X+`<worksheet ${N}><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${w.map((x,i)=>`<col min="${i+1}" max="${i+1}" width="${x}" customWidth="1"/>`).join('')}</cols><sheetData>${sd}</sheetData><autoFilter ref="A1:${col(H.length-1)}${R.length+1}"/></worksheet>`]])}
 function doExport(){const L=window._dl||[];
- const T=v=>'="'+String(v==null?'':v).replace(/"/g,'""')+'"'; // paksa teks (NIK/NIS tidak jadi 3,2E+15)
- const S=v=>{v=String(v==null?'':v);if(/^[=+@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};
  const H=['No','NIS','NISN','NIK','No KK','Nama','Nama Arab','Jenis Kelamin','Tempat Lahir','Tanggal Lahir','Umur','Sekolah','Markaz','Tingkat','Kelas','Wali Kelas','Anak Ke','Jml Saudara','Nama Ayah','NIK Ayah','Tempat, Tgl Lahir Ayah','Nama Ibu','NIK Ibu','Tempat, Tgl Lahir Ibu','Alamat'];
- const rows=L.map((x,i)=>{const a=ortu(x,'ayah'),b=ortu(x,'ibu'),m=/^(\d+)/.exec(x['Anak Ke']||'');
-  return [i+1,T(x['NIS']),T(x['NISN']),T(x['NIK']),T(kkOf(x)),S(x['Nama']),S(x['Nama Arab']),S(x['Gender']=='L'?'Laki-laki':x['Gender']=='P'?'Perempuan':''),S(title(x['Tempat Lahir'])),S(tgl(x['Tanggal Lahir'])),S(ageStr(x)),S(x._sk),S(x._mk),S(x['Tingkat']),S(x['Kelas']),S(wali(x._mk,x['Kelas'])),S(x['Anak Ke']),S(x['Jml Saudara']),S(x['Nama Ayah']),T(a.nik),S(a.ttl),S(x['Nama Ibu']),T(b.nik),S(b.ttl),S(alamat(x))].join(',')});
- const csvT='\ufeff'+H.map(S).join(',')+'\r\n'+rows.join('\r\n');
+ const R=L.map((x,i)=>{const a=ortu(x,'ayah'),b=ortu(x,'ibu');
+  return [i+1,x['NIS'],x['NISN'],x['NIK'],kkOf(x),x['Nama'],x['Nama Arab'],x['Gender']=='L'?'Laki-laki':x['Gender']=='P'?'Perempuan':'',title(x['Tempat Lahir']),tgl(x['Tanggal Lahir']),ageStr(x),x._sk,x._mk,x['Tingkat'],x['Kelas'],wali(x._mk,x['Kelas']),x['Anak Ke'],x['Jml Saudara'],x['Nama Ayah'],a.nik,a.ttl,x['Nama Ibu'],b.nik,b.ttl,alamat(x)]});
  const tag=[DF.markaz,DF.tingkat?'kelas-'+DF.tingkat:'',DF.kelas?DF.kelas.split('|')[1]:'',DF.jenjang].filter(Boolean).join('_').replace(/[^\w\-]+/g,'-');
- const name='data-siswa'+(tag?'_'+tag:'')+'_'+new Date().toISOString().slice(0,10)+'.csv';
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csvT],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-
+ const name='data-siswa'+(tag?'_'+tag:'')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';
+ const a=document.createElement('a');a.href=URL.createObjectURL(xlsxBlob(H,R,'Data Siswa'));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
 function drawDl(){const e=$('#dlw');if(e)e.innerHTML=lstHTML('dl',window._dl)}
 function closeM(){render();window.scrollTo(0,lastY)}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
