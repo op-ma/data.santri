@@ -475,7 +475,7 @@ function jkTingkatCard(d){
 const JK=f=>f=='L'?'Laki-laki':'Perempuan';
 function openK(i,f){const k=window._kk[i];openM('Kelas '+k.split('|')[1]+' · '+k.split('|')[0]+(f?' · '+JK(f):''),window._kg[k].filter(x=>!f||x['Gender']==f),wali(k.split('|')[0],k.split('|')[1])?'Wali Kelas: '+wali(k.split('|')[0],k.split('|')[1]):'')}
 function openT(t,f){openM((t?'Kelas '+t:'Semua Kelas')+(f?' · '+JK(f):''),window._kd.filter(x=>(!t||x['Tingkat']==t)&&(!f||x['Gender']==f)))}
-function render(){$('#app').classList.toggle('wide',tab=='data');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
+function render(){$('#app').classList.toggle('wide',tab=='data'||tab=='siswa');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t==tab));
  if(tab=='data'){const dd=data();window._dd=dd;DFL.forEach(([k,,f])=>{if(DF[k]&&!dd.some(x=>f(x)==DF[k]))DF[k]=''});
   $('#app').innerHTML=`<div class="dtop"><h3 id="dcnt"></h3><small>Klik nomor urut untuk melihat detail · klik judul kolom untuk mengurutkan</small><button type="button" class="dex" id="dex">⬇ Export Data</button></div><div class="dbar"><label class="df dsr"><span>Cari</span><input id="dq" type="search" placeholder="🔍 Nama siswa, nama ayah/ibu, NIS, NISN, NIK, No KK…" value="${esc(DQ)}" autocomplete="off"></label><div class="dfl" id="dfl"></div></div><div class="lw dl" id="dlw"></div>`;
   $('#dex').onclick=openExport;
